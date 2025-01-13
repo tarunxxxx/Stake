@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stake Code</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial Black', sans-serif;
+            background: #000;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .title {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        .input-container {
+            display: inline-block;
+            text-align: left;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            border: 1px solid #fff;
+            border-radius: 5px;
+            background: #000;
+            color: #fff;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border: none;
+            background: #fff;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">STAKE CODE</div>
+        <div class="input-container">
+            <form id="stake-form">
+                <input 
+                    type="text" 
+                    id="stake-code" 
+                    placeholder="Enter your code..." 
+                    required
+                />
+                <button type="button" onclick="submitCode()">Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function submitCode() {
+            const stakeCode = document.getElementById('stake-code').value;
+            if (!stakeCode) {
+                alert('Please enter a code.');
+                return;
+            }
+
+            const githubUsername = 'YOUR_GITHUB_USERNAME';
+            const repoName = 'YOUR_REPO_NAME';
+            const filePath = 'codes.txt'; // File to store the codes
+            const token = 'YOUR_PERSONAL_ACCESS_TOKEN';
+
+            try {
+                // Fetch existing file details to get the SHA
+                const fileUrl = `https://api.github.com/repos/${githubUsername}/${repoName}/contents/${filePath}`;
+                const fileResponse = await fetch(fileUrl, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                let sha = null;
+                let content = stakeCode + '\n';
+
+                if (fileResponse.ok) {
+                    const fileData = await fileResponse.json();
+                    sha = fileData.sha; // Existing file SHA
+                    const existingContent = atob(fileData.content);
+                    content = existingContent + stakeCode + '\n';
+                }
+
+                // Update or create the file
+                const response = await fetch(fileUrl, {
+                    method: 'PUT',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: 'Add new stake code',
+                        content: btoa(content),
+                        sha: sha
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Code submitted successfully!');
+                } else {
+                    alert('Failed to submit code.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>
