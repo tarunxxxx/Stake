@@ -62,75 +62,42 @@
 <body>
     <div class="container">
         <div class="title">STAKE CODE</div>
-        <div class="input-container">
-            <form id="stake-form">
-                <input 
-                    type="text" 
-                    id="stake-code" 
-                    placeholder="Enter your code..." 
-                    required
-                />
-                <button type="button" onclick="submitCode()">Submit</button>
-            </form>
-        </div>
+        <form name="submit-to-google-sheet" class="input-container">
+            <input 
+                type="text" 
+                name="code" 
+                id="code" 
+                placeholder="Enter your code..." 
+                required
+            />
+            <button type="submit">Submit</button>
+        </form>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        async function submitCode() {
-            const stakeCode = document.getElementById('stake-code').value;
-            if (!stakeCode) {
-                alert('Please enter a code.');
-                return;
-            }
+        // Your Web App URL
+        const scriptURL = "https://script.google.com/macros/s/AKfycbyqcBZCW1V9kzlMy7fvkZ97P62YbSeUiemb2oIFLDa5CTI8YHRFZN-a4YjCZblU_cB3NQ/exec";
+        
+        const form = document.forms["submit-to-google-sheet"];
+        
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
 
-            const githubUsername = 'tarunxxxx';
-            const repoName = 'Stake';
-            const filePath = 'codes.txt'; // File to store the codes
-            const token = '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';
-
-            try {
-                // Fetch existing file details to get the SHA
-                const fileUrl = `https://api.github.com/repos/${githubUsername}/${repoName}/contents/${filePath}`;
-                const fileResponse = await fetch(fileUrl, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
+            fetch(scriptURL, { method: "POST", body: formData })
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.result === "success") {
+                        Swal.fire("Done", "Submitted Successfully.", "success");
+                    } else {
+                        Swal.fire("Error", "Something went wrong. Please try again!", "error");
                     }
+                })
+                .catch(() => {
+                    Swal.fire("Error", "Something went wrong. Please try again!", "error");
                 });
-
-                let sha = null;
-                let content = stakeCode + '\n';
-
-                if (fileResponse.ok) {
-                    const fileData = await fileResponse.json();
-                    sha = fileData.sha; // Existing file SHA
-                    const existingContent = atob(fileData.content);
-                    content = existingContent + stakeCode + '\n';
-                }
-
-                // Update or create the file
-                const response = await fetch(fileUrl, {
-                    method: 'PUT',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: 'Add new stake code',
-                        content: btoa(content),
-                        sha: sha
-                    })
-                });
-
-                if (response.ok) {
-                    alert('Code submitted successfully!');
-                } else {
-                    alert('Failed to submit code.');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            }
-        }
+        });
     </script>
 </body>
 </html>
